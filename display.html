@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Example</title>
+</head>
+<body>
+    <h1>Hello</h1>
+
+    <!-- Button to trigger the payment -->
+    <button id="rzp-button1" style="display: none;">Pay</button>
+
+    <!-- jQuery and Razorpay checkout script -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+        // Variable to store the order ID
+        var razorpayOrderId;
+
+        // Function to initiate the payment flow
+        $(document).ready(function () {
+            // AJAX request to the server to create an order
+            var createOrderSettings = {
+                url: "/create/orderId",
+                method: "POST",
+                timeout: 0,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: JSON.stringify({
+                    amount: "500",
+                }),
+            };
+
+            // Handling the response from the server
+            $.ajax(createOrderSettings).done(function (createOrderResponse) {
+                // Storing the order ID
+                razorpayOrderId = createOrderResponse.orderId;
+                console.log(razorpayOrderId);
+                // Showing the pay button
+                $("#rzp-button1").show();
+
+                // Configuration for the Razorpay payment
+                var razorpayOptions = {
+                    "key": "rzp_test_ISlndBIl755xkB",
+                    "amount": "500",
+                    "currency": "INR",
+                    "name": "Acme Corp",
+                    "description": "Test Transaction",
+                    "order_id": razorpayOrderId,
+                    "handler": function (paymentResponse) {
+                        // Handling the successful payment response
+                        alert(paymentResponse.razorpay_payment_id);
+                        alert(paymentResponse.razorpay_order_id);
+                        alert(paymentResponse.razorpay_signature);
+                    },
+                    "prefill": {
+                        "name": "Gaurav Kumar",
+                        "email": "gaurav.kumar@example.com",
+                        "contact": "9999999999"
+                    },
+                    "notes": {
+                        "address": "Razorpay Corporate Office"
+                    },
+                    "theme": {
+                        "color": "#3399cc"
+                    }
+                };
+
+                // Creating a new instance of Razorpay with the configured options
+                var razorpayInstance = new Razorpay(razorpayOptions);
+
+                // Handling payment failure
+                razorpayInstance.on('payment.failed', function (failedPaymentResponse) {
+                    console.error(failedPaymentResponse.error);
+                });
+
+                // Event listener for the button click to open the Razorpay checkout
+                document.getElementById('rzp-button1').onclick = function (event) {
+                    razorpayInstance.open();
+                    event.preventDefault();
+                };
+
+                // Configuration for the AJAX request to verify the payment on the server
+                var verifyPaymentSettings = {
+                    "url": "/api/payment/verify",
+                    "method": "POST",
+                    "timeout": 0,
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "data": JSON.stringify({ response: razorpayOptions }),
+                };
+
+                // Verifying the payment on the server
+                $.ajax(verifyPaymentSettings).done(function (verificationResponse) {
+                    // Handling the verification response
+                    console.log(verificationResponse);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
