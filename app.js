@@ -1,14 +1,11 @@
 const express = require('express');
 const app = express();
-const Razorpay = require('razorpay');
+
 app.use(express.json());
 const path = require('path');
+let instance=require('./instance')
 
-// Creating a Razorpay instance
-var instance = new Razorpay({
-    key_id: 'rzp_test_ISlndBIl755xkB',
-    key_secret: 'AFrK16nAoKbuy8HfcyD3XnNK',
-});
+
 
 // Serving the HTML page on a GET request
 app.get('/', (req, res) => {
